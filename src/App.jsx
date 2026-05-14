@@ -4,6 +4,7 @@ import Header from './components/Header.jsx';
 import Map3D from './components/Map3D.jsx';
 import ControlPanel from './components/ControlPanel.jsx';
 import MetricsPanel from './components/MetricsPanel.jsx';
+import AboutPage from './components/AboutPage.jsx';
 import { useMetrics } from './hooks/useMetrics.js';
 import { BASELINE_MIX } from './models/metrics-engine.js';
 import { SCENARIOS } from './data/scenarios.js';
@@ -23,6 +24,7 @@ export default function App() {
   const [activeLayers, setActiveLayers] = useState(DEFAULT_LAYERS);
   const [activeScenario, setActiveScenario] = useState('statusQuo');
   const [comparing, setComparing] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const metrics = useMetrics(transitMix);
 
@@ -47,7 +49,23 @@ export default function App() {
         activeScenario={activeScenario}
         comparing={comparing}
         onToggleCompare={() => setComparing(c => !c)}
+        onOpenAbout={() => setShowAbout(true)}
       />
+
+      <AnimatePresence>
+        {showAbout && (
+          <motion.div
+            key="about"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-40"
+          >
+            <AboutPage onBack={() => setShowAbout(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Left panel */}
