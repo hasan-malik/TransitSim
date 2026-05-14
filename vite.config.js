@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? '/TransitSim/' : '/',
   plugins: [react()],
   optimizeDeps: {
     // Force Vite to pre-bundle all deck.gl + mapbox packages.
