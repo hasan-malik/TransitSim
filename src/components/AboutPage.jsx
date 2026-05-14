@@ -2,8 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, Database, FlaskConical, Quote,
-  GitBranch, Sigma, AlertTriangle, ExternalLink, Github, Mail,
-  Calculator, Layers, MapPin, Wind, Activity, Gauge,
+  GitBranch, Sigma, AlertTriangle, ExternalLink, Github, Globe,
+  Calculator, Layers, MapPin, Wind, Activity, Gauge, Flame,
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -278,10 +278,10 @@ export default function AboutPage({ onBack }) {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-[0.95] mb-5">
-            An evidence-based
+            A parameterized
             <br />
             <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-              urban-mobility simulator
+              urban mobility simulation
             </span>
             <br />
             for downtown Toronto.
@@ -376,14 +376,18 @@ export default function AboutPage({ onBack }) {
           driven by a road-demand-to-capacity ratio:
         </p>
 
-        <Equation caption="Equation 2 — BPR (Bureau of Public Roads) volume-delay function. α = 0.15, β = 4.">
-          v_actual  =  v_free  /  ( 1  +  α · ( V / C )^β )
+        <Equation caption="Equation 2 — Augmented BPR (Bureau of Public Roads) volume-delay function as implemented in src/models/metrics-engine.js. Canonical α = 0.15, β = 4; an additional amplifier γ = 3.5 is applied to reflect surface-grid downtown conditions where peak-hour delays exceed what a strict free-flow BPR would predict.">
+          v_actual  =  v_free  /  ( 1  +  α · γ · ( V / C )^β )
         </Equation>
 
         <p>
           Where <span className="font-mono">V/C</span> is computed as total
-          mode-weighted road area demanded (m²·person) divided by total downtown
-          surface capacity (lane-km × 3.5 m × 1000 m/km).
+          mode-weighted road area demanded (m²) divided by total downtown
+          surface capacity (lane-km × 3.5 m × 1000 m/km). Note this is a
+          static-snapshot intensity ratio rather than a flow-based per-hour
+          assignment, which inflates V/C above unity at the daily-aggregate
+          scale; the index is therefore clamped to the [0, 100] interval before
+          being fed into the BPR formula.
         </p>
 
         <p>
@@ -483,19 +487,49 @@ export default function AboutPage({ onBack }) {
       <Section id="models" eyebrow="04 — Models" title="Sub-model details" icon={Sigma}>
         <ModelCard
           icon={Wind}
-          title="Air quality dispersion"
+          title="Air quality (ambient PM2.5)"
           body={
             <>
-              Daily PM2.5 emitted is converted to an ambient downtown
-              concentration via a simplified gaussian-plume approximation
-              calibrated against City of Toronto air-monitoring data. Background
-              PM2.5 is set to 4 μg/m³ (rural Ontario reference) and the
-              traffic-attributable contribution is added linearly. Comparison
-              against the WHO annual guideline of 5 μg/m³<CitationRef n={12}/>
-              drives the Air-Quality sub-score.
+              Daily mode-weighted PM2.5 is converted to an estimated downtown
+              ambient concentration through a deliberately simple linear
+              relationship, <span className="font-mono">PM2.5_ambient = 4 + 5000 · Σ Eₚₘ</span>,
+              where the 4 μg/m³ floor approximates regional background and the
+              5,000 μg·m⁻³ per tonne-per-day coefficient was tuned so that the
+              Cordon-Count baseline mix returns a downtown concentration in the
+              empirically observed 8–12 μg/m³ band. This is <em>not</em> a
+              Gaussian-plume or AERMOD-style dispersion solve — wind,
+              atmospheric stability, building-canyon effects, and diurnal
+              variation are not modelled. The result is compared against the
+              WHO 2021 annual PM2.5 guideline of 5 μg/m³<CitationRef n={12}/>
+              to drive the Air-Quality sub-score.
             </>
           }
         />
+
+        <ModelCard
+          icon={Flame}
+          title="Pollution heatmap (visualisation overlay, not engine output)"
+          body={
+            <>
+              The red/yellow/green heat-overlay on the 3D map is a separate
+              visual artefact and is <em>not</em> the engine's PM2.5 number.
+              It is a Deck.gl <code className="text-sky-300">HeatmapLayer</code>
+              over ~1,400 deterministically-seeded sample points: a coarse
+              city-wide grid, a denser downtown grid, and hand-placed hot-spot
+              clusters along the Gardiner Expressway, Don Valley Parkway, Yonge
+              Street, and Bloor Street corridors. Each point's intensity is
+              modulated live by <span className="font-mono">0.88 · car_share + 0.12 · bus_share</span>,
+              reflecting the dominance of surface ICE tailpipe emissions. The
+              overlay is directionally faithful — it brightens with car share
+              and concentrates on real high-traffic arterials — but the
+              underlying sample weights are a parametric spatial proxy, not
+              measured sensor data. Treat the heatmap as a <em>stylised
+              indicator</em> of where pollution would worsen, not as a
+              quantitative concentration field.
+            </>
+          }
+        />
+
 
         <ModelCard
           icon={Gauge}
@@ -647,10 +681,11 @@ https://github.com/hasanmalik/TransitSim`}
             <Github size={14} /> Source on GitHub
           </a>
           <a
-            href="mailto:mhimalikgd@gmail.com"
+            href="https://hasan-malik.github.io"
+            target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-slate-200 transition-colors"
           >
-            <Mail size={14} /> Contact the author
+            <Globe size={14} /> Contact the author
           </a>
           <button
             onClick={onBack}
