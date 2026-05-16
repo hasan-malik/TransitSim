@@ -8,6 +8,9 @@ TransitSim is an interactive, research-grade decision-support tool that quantifi
 > **Author:** [Hasan Malik](https://hasan-malik.github.io)
 > **Version:** 1.0 · MIT-style research licence
 
+<img width="1470" height="799" alt="Screenshot 2026-05-16 at 12 51 46 am" src="https://github.com/user-attachments/assets/bfac413e-4743-4d1f-aaa6-1c85dc8e1eb2" />
+<img width="1470" height="795" alt="Screenshot 2026-05-16 at 12 52 02 am" src="https://github.com/user-attachments/assets/7e09c107-acbb-47a3-9d27-3a27467f9a1b" />
+
 ---
 
 ## At a glance
