@@ -10,7 +10,7 @@
  *   Active City:   15-minute city framework (Moreno et al., 2021)
  *   Car Dominant:  1960s North American sprawl model (historical baseline)
  *   Bus BRT:       Bogotá TransMilenio-equivalent overlay
- *   2050 Green:    Toronto Climate Action Strategy net-zero target
+ *   2050 TransformTO: Toronto Climate Action Strategy net-zero target
  */
 export const SCENARIOS = {
   statusQuo: {
@@ -56,7 +56,7 @@ export const SCENARIOS = {
     mix: { car: 20, bus: 45, subway: 20, cycling: 6, pedestrian: 7, other: 2 },
   },
   greenMix: {
-    label:       '2050 Green Target',
+    label:       '2050 TransformTO Target',
     description: 'Toronto Climate Action Strategy net-zero mobility scenario',
     icon:        '🌿',
     mix: { car: 5, bus: 20, subway: 40, cycling: 20, pedestrian: 13, other: 2 },

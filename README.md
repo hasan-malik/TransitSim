@@ -61,7 +61,7 @@ TransitSim is a static-equilibrium **activity-based mode-share model**. It assum
 ### Inputs
 - **Modal-share vector** `m = (mₖ)` for `k ∈ {car, bus, subway, cycling, pedestrian, other}`, normalised so `Σmₖ = 1`.
 - **Layer toggles** for the 3D Mapbox/Deck.gl visualisation (traffic, pollution, transit, cycling, trips, heat-map).
-- **Preset scenarios** derived from published policy documents (TransformTO Net Zero [15], 15-Minute City [14], BRT, Car-Free Downtown).
+- **Preset scenarios** derived from published policy documents (TransformTO Net Zero [15], 15-Minute City [14], BRT, Car-Free Downtown). The **2050 TransformTO Target** preset encodes Toronto's Climate Action Strategy net-zero mobility scenario: car 5 %, subway 40 %, bus 20 %, cycling 20 %, pedestrian 13 %, other 2 %. TransformTO is the City of Toronto's binding decarbonisation strategy [15], adopted by Council, targeting net-zero city-wide emissions by 2040; the 2050 label reflects the modal split considered consistent with deep transport decarbonisation under a mid-century global net-zero pathway. On the composite sustainability scale this scenario scores **A (≈ 79/100)**.
 
 ### Outputs
 For each metric the engine reports both the absolute value and the percentage delta against the 2022 Cordon-Count baseline [5]. A weighted composite score (0–100) is mapped to a letter grade A+ → F.
@@ -85,10 +85,10 @@ Travel time is computed by mode, with the speed of car and bus degraded by an **
 ```
        v_actual  =  v_free  /  ( 1  +  α · γ · ( V / C )^β )
 
-       α = 0.15,  β = 4,  γ = 3.5
+       α ≈ 0.26,  β ≈ 2.39,  γ ≈ 6.16   (Bayesian-calibrated; see analysis/)
 ```
 
-Where `V/C` is total mode-weighted road area demanded (m²) divided by total downtown surface capacity (lane-km × 3.5 m × 1000 m/km). Note this is a static-snapshot intensity ratio rather than a flow-based per-hour assignment, which inflates V/C above unity at the daily-aggregate scale; the index is therefore clamped to `[0, 100]` before being fed into the BPR formula.
+Where `V/C` is total mode-weighted road area demanded (m²) — scaled by 1/8 to account for daily trips being distributed across the operating day — divided by total downtown surface capacity (lane-km × 3.5 m × 1000 m/km). The index is clamped to `[0, 100]` before being fed into the BPR formula.
 
 Noise is summed in the energy domain because dB is logarithmic; share-weighted linear pressures are summed and re-converted (per WHO method [11]):
 
@@ -113,6 +113,8 @@ The composite sustainability grade is a weighted average reflecting policy prior
              0.05 · S_noise   +
              0.05 · S_equity
 ```
+
+Each sub-score is normalised against a calibrated real-world anchor. `S_co₂` reaches zero at 420 t/day — the modelled output of a 100 % car modal mix. `S_air` reaches zero at 15 μg/m³ ambient PM2.5, the WHO 24-hour guideline [12]. The congestion index incorporates a temporal distribution factor (÷ 8) representing the spread of 620,000 daily person-trips across the operating day; without this the daily-aggregate road demand saturates the index for any realistic modal mix. Under these thresholds the 2022 Toronto downtown baseline scores **C (≈ 52/100)**; a car-dominant city scores F; the **2050 TransformTO Target** scenario scores **A (≈ 79/100)**.
 
 ---
 
@@ -195,13 +197,13 @@ The "Status Quo" preset reflects the City of Toronto Cordon Count 2022 [5]: car 
 ## Sub-model details
 
 ### Air quality (ambient PM2.5)
-Daily mode-weighted PM2.5 is converted to an estimated downtown ambient concentration through a deliberately simple linear relationship, `PM2.5_ambient = 4 + 5000 · ΣE_PM`, where the 4 μg/m³ floor approximates regional background and the 5,000 μg·m⁻³ per tonne-per-day coefficient was tuned so that the Cordon-Count baseline mix returns a downtown concentration in the empirically observed 8–12 μg/m³ band. **This is not a Gaussian-plume or AERMOD-style dispersion solve** — wind, atmospheric stability, building-canyon effects, and diurnal variation are not modelled. The result is compared against the WHO 2021 annual PM2.5 guideline of 5 μg/m³ [12] to drive the Air-Quality sub-score.
+Daily mode-weighted PM2.5 is converted to an estimated downtown ambient concentration through a deliberately simple linear relationship, `PM2.5_ambient = 4 + 56 · ΣE_PM`, where the 4 μg/m³ floor approximates regional background and the 56 μg·m⁻³ per tonne-per-day dispersion coefficient is calibrated so the Cordon-Count baseline mix returns ~8 μg/m³ — consistent with observed Toronto downtown annual averages of 7–9 μg/m³. The air-quality sub-score reaches zero at 15 μg/m³, the WHO 24-hour PM2.5 guideline [12]. **This is not a Gaussian-plume or AERMOD-style dispersion solve** — wind, atmospheric stability, building-canyon effects, and diurnal variation are not modelled.
 
 ### Pollution heatmap (visualisation overlay, not engine output)
 The red/yellow/green heat-overlay on the 3D map is a separate visual artefact and is **not** the engine's PM2.5 number. It is a Deck.gl `HeatmapLayer` over ~1,400 deterministically-seeded sample points: a coarse city-wide grid, a denser downtown grid, and hand-placed hot-spot clusters along the Gardiner Expressway, Don Valley Parkway, Yonge Street, and Bloor Street corridors. Each point's intensity is modulated live by `0.88 · car_share + 0.12 · bus_share`, reflecting the dominance of surface ICE tailpipe emissions. The overlay is directionally faithful — it brightens with car share and concentrates on real high-traffic arterials — but the underlying sample weights are a parametric spatial proxy, not measured sensor data. Treat the heatmap as a *stylised indicator* of where pollution would worsen, not as a quantitative concentration field.
 
 ### Congestion and BPR delay
-Road demand is computed as `Σ N·mₖ·rₖ` where `rₖ` is the moving road area per person (table above). Capacity is `520 lane-km × 3.5 m effective lane width × 1000 m/km`. The BPR function with α = 0.15, β = 4, γ = 3.5 [10] degrades car and bus speeds non-linearly under load — note the quartic exponent: a doubling of V/C produces a 16-fold delay penalty before the γ amplifier, ~56-fold after.
+Road demand is computed as `Σ N·mₖ·rₖ` where `rₖ` is the moving road area per person (table above). Capacity is `520 lane-km × 3.5 m effective lane width × 1000 m/km`. Because N is a daily total, road demand is scaled by 1/8 before forming the V/C ratio — representing the effective distribution of trips across the operating day rather than treating all 620,000 as simultaneous. The BPR function [10] then degrades car and bus speeds non-linearly under load using Bayesian-calibrated coefficients (α ≈ 0.26, β ≈ 2.39, γ ≈ 6.16) fit to observed downtown-Toronto speed data — a doubling of V/C produces a ~5× delay penalty (2^β), compared to the ~16× the 1964 textbook quartic would predict.
 
 ### Health & productivity
 The Health Index uses CDC MET classifications [16] — cycling 7.8 METs, brisk walking 3.5 METs, transit 2.1 METs (for walk-to-stop activity), driving 0.9 METs. Productivity is then modulated by commute time (each minute over a 15-minute reference costs 0.5 % productivity), congestion stress (0.12 % per index point) and active-mode wellness gains (+0.2 % per health-index point above 30).

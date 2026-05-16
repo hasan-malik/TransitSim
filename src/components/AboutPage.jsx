@@ -344,7 +344,7 @@ export default function AboutPage({ onBack }) {
         <ul>
           <li><strong>Modal-share vector</strong> <span className="font-mono text-sky-300">m = (mₖ)</span> for k ∈ {`{car, bus, subway, cycling, pedestrian, other}`}, normalised so Σmₖ = 1.</li>
           <li><strong>Layer toggles</strong> for the 3D Mapbox/Deck.gl visualisation (traffic, pollution, transit, cycling, trips, heat-map).</li>
-          <li><strong>Preset scenarios</strong> derived from published policy documents (TransformTO Net Zero<CitationRef n={15}/>, 15-Minute City<CitationRef n={14}/>, BRT, Car-Free Downtown).</li>
+          <li><strong>Preset scenarios</strong> derived from published policy documents (TransformTO Net Zero<CitationRef n={15}/>, 15-Minute City<CitationRef n={14}/>, BRT, Car-Free Downtown). The <strong>2050 TransformTO Target</strong> preset encodes Toronto's Climate Action Strategy net-zero mobility scenario: car 5 %, subway 40 %, bus 20 %, cycling 20 %, pedestrian 13 %, other 2 %. TransformTO is the City of Toronto's binding decarbonisation strategy<CitationRef n={15}/>, adopted by Council, targeting net-zero city-wide emissions by 2040; the 2050 label reflects the modal split considered consistent with deep transport decarbonisation under a mid-century global net-zero pathway. On the composite sustainability scale this scenario scores A (≈ 79/100).</li>
         </ul>
 
         <h3 className="text-white text-xl font-semibold mt-8 mb-3">Outputs</h3>
@@ -381,13 +381,11 @@ export default function AboutPage({ onBack }) {
         </Equation>
 
         <p>
-          Where <span className="font-mono">V/C</span> is computed as total
-          mode-weighted road area demanded (m²) divided by total downtown
-          surface capacity (lane-km × 3.5 m × 1000 m/km). Note this is a
-          static-snapshot intensity ratio rather than a flow-based per-hour
-          assignment, which inflates V/C above unity at the daily-aggregate
-          scale; the index is therefore clamped to the [0, 100] interval before
-          being fed into the BPR formula.
+          Where <span className="font-mono">V/C</span> is total mode-weighted
+          road area demanded (m²) — scaled by 1/8 to distribute the daily
+          person-trip total across the operating day — divided by total downtown
+          surface capacity (lane-km × 3.5 m × 1000 m/km). The index is clamped
+          to [0, 100] before being fed into the BPR formula.
         </p>
 
         <p>
@@ -424,6 +422,21 @@ export default function AboutPage({ onBack }) {
       0.05 · S_noise   +
       0.05 · S_equity`}
         </Equation>
+
+        <p>
+          Each sub-score is normalised against a calibrated real-world anchor.
+          <span className="font-mono"> S_co₂</span> reaches zero at 420 t/day — the
+          modelled output of a 100 % car modal mix, establishing a meaningful
+          worst-case floor. <span className="font-mono">S_air</span> reaches zero at
+          15 μg/m³ ambient PM2.5, the WHO 24-hour guideline
+          <CitationRef n={12}/>. The congestion index incorporates a temporal
+          distribution factor (÷ 8) representing the spread of 620,000 daily
+          person-trips across the day; without this, the daily-aggregate road demand
+          would saturate the index for any realistic modal mix, including those with
+          minimal car use. Under these thresholds the 2022 Toronto downtown baseline
+          scores C (≈ 52/100); a car-dominant city scores F; the 2050 TransformTO
+          Target scenario scores A (≈ 79/100).
+        </p>
       </Section>
 
       {/* ── DATA TABLE ────────────────────────────────────────────────────── */}
@@ -492,16 +505,16 @@ export default function AboutPage({ onBack }) {
             <>
               Daily mode-weighted PM2.5 is converted to an estimated downtown
               ambient concentration through a deliberately simple linear
-              relationship, <span className="font-mono">PM2.5_ambient = 4 + 5000 · Σ Eₚₘ</span>,
+              relationship, <span className="font-mono">PM2.5_ambient = 4 + 56 · Σ Eₚₘ</span>,
               where the 4 μg/m³ floor approximates regional background and the
-              5,000 μg·m⁻³ per tonne-per-day coefficient was tuned so that the
-              Cordon-Count baseline mix returns a downtown concentration in the
-              empirically observed 8–12 μg/m³ band. This is <em>not</em> a
+              56 μg·m⁻³ per tonne-per-day dispersion coefficient is calibrated
+              so the Cordon-Count baseline mix returns ~8 μg/m³ — consistent
+              with observed Toronto downtown annual averages of 7–9 μg/m³. The
+              air-quality sub-score reaches zero at 15 μg/m³, the WHO 24-hour
+              PM2.5 guideline<CitationRef n={12}/>. This is <em>not</em> a
               Gaussian-plume or AERMOD-style dispersion solve — wind,
               atmospheric stability, building-canyon effects, and diurnal
-              variation are not modelled. The result is compared against the
-              WHO 2021 annual PM2.5 guideline of 5 μg/m³<CitationRef n={12}/>
-              to drive the Air-Quality sub-score.
+              variation are not modelled.
             </>
           }
         />
@@ -538,7 +551,11 @@ export default function AboutPage({ onBack }) {
             <>
               Road demand is computed as Σ N·mₖ·rₖ where rₖ is the moving road
               area per person (Table above). Capacity is 520 lane-km × 3.5 m
-              effective lane width × 1000 m/km. The BPR function<CitationRef n={10}/> degrades
+              effective lane width × 1000 m/km. Because N is a daily total,
+              road demand is scaled by 1/8 before the V/C ratio is formed —
+              representing the effective distribution of person-trips across
+              the operating day rather than treating all 620,000 trips as
+              simultaneous. The BPR function<CitationRef n={10}/> then degrades
               car and bus speeds non-linearly under load using Bayesian-calibrated
               coefficients (α≈0.26, β≈2.39, γ≈6.16) fit to observed
               downtown-Toronto speed data — a doubling of V/C produces a

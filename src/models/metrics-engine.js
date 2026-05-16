@@ -226,8 +226,10 @@ export function calculateMetrics(transitMix) {
     pm25Tonnes += trips * AVG_TRIP_KM * (PM25_G_PER_PAX_KM[mode] ?? 0) / 1e6;
   });
   // Downtown ambient concentration (μg/m³) — City of Toronto air quality model:
-  // background ~4 μg/m³ + traffic contribution (WHO guideline: 5 μg/m³ annual)
-  const pm25Ambient = 4.0 + pm25Tonnes * 5000; // simplified dispersion model
+  // background ~4 μg/m³ + traffic contribution (WHO 24h guideline: 15 μg/m³)
+  // Factor 56 calibrated so the 2022 Toronto baseline mix (0.072 t/day) yields ~8 μg/m³,
+  // consistent with observed downtown PM2.5 of 7–9 μg/m³ (City of Toronto, 2023).
+  const pm25Ambient = 4.0 + pm25Tonnes * 56;
 
   // ── NOx emissions ─────────────────────────────────────────────────────────
   let noxTonnes = 0;
@@ -245,8 +247,9 @@ export function calculateMetrics(transitMix) {
   });
   // Capacity: total lane-km × avg lane width 3.5m × 1000 m/km = m² of surface
   const roadCapacity = ROAD_LANE_KM * 3.5 * 1000;
-  // Clamp 0–100
-  const congestionIndex = Math.min(100, Math.max(0, (roadDemand / roadCapacity) * 100));
+  // The * 12.5 factor (= 100 / 8) accounts for daily trips being spread across the day
+  // rather than simultaneous — without it, even 100% walking exceeds "capacity" (a bug).
+  const congestionIndex = Math.min(100, Math.max(0, (roadDemand / roadCapacity) * 12.5));
 
   // ── Average commute time (minutes, one-way, 4.8 km) ──────────────────────
   // Car and bus speeds degrade with congestion via the augmented BPR
@@ -315,8 +318,8 @@ export function calculateMetrics(transitMix) {
 
   // ── Overall sustainability grade (0–100) ──────────────────────────────────
   // Weighted composite of key sustainability dimensions
-  const co2Score     = Math.max(0, 100 - (co2Tonnes / 200) * 100);  // 0 t → 100; 200+ t → 0
-  const airScore     = Math.max(0, 100 - ((pm25Ambient - 4) / 25) * 100);
+  const co2Score     = Math.max(0, 100 - (co2Tonnes / 420) * 100);  // 0 t → 100; 420+ t → 0 (≈ 100% car worst-case)
+  const airScore     = Math.max(0, 100 - ((pm25Ambient - 4) / 11) * 100);  // 4 μg/m³ → 100; 15+ → 0 (WHO 24h limit)
   const congScore    = 100 - congestionIndex;
   const noiseScore   = Math.max(0, 100 - ((noiseDBA - 35) / 40) * 100);
 
