@@ -6,7 +6,7 @@ TransitSim is an interactive, research-grade decision-support tool that quantifi
 
 > **Live demo:** [hasan-malik.github.io/TransitSim](https://hasan-malik.github.io/TransitSim/)
 > **Author:** [Hasan Malik](https://hasan-malik.github.io)
-> **Version:** 1.0 · MIT-style research licence
+> **Version:** 1.0 · [MIT Licence](LICENSE)
 
 <img width="1470" height="799" alt="Screenshot 2026-05-16 at 12 51 46 am" src="https://github.com/user-attachments/assets/bfac413e-4743-4d1f-aaa6-1c85dc8e1eb2" />
 <img width="1470" height="795" alt="Screenshot 2026-05-16 at 12 52 02 am" src="https://github.com/user-attachments/assets/7e09c107-acbb-47a3-9d27-3a27467f9a1b" />
@@ -272,8 +272,24 @@ src/
 
 ---
 
+## Licence
+
+TransitSim is released under the [MIT Licence](LICENSE) — you are free to use,
+modify, and redistribute the code, including commercially, provided the
+copyright notice is retained.
+
+The MIT Licence covers the **source code only**. Third-party npm dependencies
+retain their own licences (note that Mapbox GL JS v2+ is distributed under
+Mapbox's proprietary terms and requires an access token). Model coefficients
+are uncopyrightable facts cited from the public sources listed above; the
+geospatial data in [`src/data/toronto-geo.js`](src/data/toronto-geo.js) derives
+from City of Toronto Open Data, published under the Open Government Licence –
+Toronto with attribution preserved in that file.
+
+---
+
 ## Author
 
-[**Hasan Malik**](https://hasan-malik.github.io) · 2026 · MIT-style research licence
+[**Hasan Malik**](https://hasan-malik.github.io) · 2026
 
 The complete in-app documentation — including animated equations and a hyperlinked bibliography — is available via the **About** button in the top-right of the simulator.
