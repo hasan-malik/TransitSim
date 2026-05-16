@@ -51,9 +51,26 @@
  *   Other:       2 %
  */
 
+import calibrated from './calibrated.json';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS (research-sourced)
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Augmented BPR volume-delay coefficients.
+ *
+ * These are NOT the 1964 textbook values (α=0.15, β=4, γ=3.5). They are the
+ * posterior-mean estimates from a Bayesian calibration (PyMC / NUTS) fitted to
+ * observed downtown-Toronto (V/C, speed) data — see analysis/ for the pipeline
+ * and analysis/notebooks/01_bayesian_calibration.ipynb for the derivation.
+ * Regenerate via `python analysis/export_results.py`.
+ */
+export const BPR = {
+  alpha: calibrated.bpr.alpha,
+  beta:  calibrated.bpr.beta,
+  gamma: calibrated.bpr.gamma,
+};
 
 /** Total daily person-trips within the simulated downtown core */
 const DAILY_TRIPS = 620_000;
@@ -232,8 +249,9 @@ export function calculateMetrics(transitMix) {
   const congestionIndex = Math.min(100, Math.max(0, (roadDemand / roadCapacity) * 100));
 
   // ── Average commute time (minutes, one-way, 4.8 km) ──────────────────────
-  // Car and bus speeds degrade with congestion (BPR function approximation)
-  const congFactor = 1 + 0.15 * Math.pow(congestionIndex / 100, 4) * 3.5; // BPR α=0.15 β=4
+  // Car and bus speeds degrade with congestion via the augmented BPR
+  // volume-delay function, using Bayesian-calibrated coefficients (see BPR above).
+  const congFactor = 1 + BPR.alpha * BPR.gamma * Math.pow(congestionIndex / 100, BPR.beta);
   let totalWeightedTime = 0;
   Object.keys(mix).forEach(mode => {
     const share = mix[mode] / 100;

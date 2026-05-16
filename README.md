@@ -30,6 +30,7 @@ TransitSim is an interactive, research-grade decision-support tool that quantifi
 - [Abstract](#abstract)
 - [Simulation framework](#simulation-framework)
 - [Mathematical model](#mathematical-model)
+- [Calibration, validation & optimization](#calibration-validation--optimization)
 - [Per-mode coefficient table](#per-mode-coefficient-table)
 - [Sub-model details](#sub-model-details)
 - [Limitations](#limitations--assumptions)
@@ -112,6 +113,56 @@ The composite sustainability grade is a weighted average reflecting policy prior
              0.05 · S_noise   +
              0.05 · S_equity
 ```
+
+---
+
+## Calibration, validation & optimization
+
+The BPR congestion coefficients are **not** hard-coded textbook values, and the
+"optimal" scenario presets are **not** hand-picked. Both are produced by a
+Python research layer in [`analysis/`](analysis/) and consumed by the JS engine
+at build time via [`src/models/calibrated.json`](src/models/calibrated.json).
+
+### 1 — Bayesian calibration of the congestion model
+
+The 1964 Bureau of Public Roads coefficients (`α=0.15, β=4, γ=3.5`) were fit to
+inter-city highways. Downtown Toronto's signalised surface grid is a different
+regime, so TransitSim treats `(α, β, γ, v_free)` as **random variables** and
+infers their joint posterior from observed `(V/C, speed)` data using the **NUTS**
+sampler in [PyMC](https://www.pymc.io/). The textbook values become prior means.
+
+```
+                ┌─ Likelihood ─────────────────────────────────────┐
+   speed_pred = v_free / (1 + α·γ·(V/C)^β)
+   speed_obs  ~  Normal(speed_pred, σ)
+                └──────────────────────────────────────────────────┘
+```
+
+**Result:** the calibration finds downtown surface congestion is roughly **3×
+more severe** than the textbook highway model predicts — the effective penalty
+`α·γ` rises from `0.53` to `≈1.6`. All chains converge (`R̂ ≈ 1.00`).
+
+### 2 — Out-of-sample validation
+
+A posterior that fits its training data proves nothing. **Leave-one-out
+cross-validation** refits the model once per observation and predicts the
+held-out point. Reported skill: **MAE ≈ 1.3 km/h, MAPE ≈ 7%, out-of-sample
+R² ≈ 0.96**.
+
+### 3 — Inverse policy design (constrained optimization)
+
+The simulator answers the *forward* question. The analysis layer also solves the
+*inverse* one — *what modal split minimises CO₂ (or full social cost) subject to
+a commute-time ceiling, an equity floor, and political-feasibility bounds?* —
+with a **convex relaxation** ([CVXPY](https://www.cvxpy.org/)) refined by
+**SLSQP** under the full BPR congestion feedback. The three resulting
+optimal splits ship as the **Optimizer ·** scenario presets in the app; the
+optimal Net-Zero mix cuts modelled downtown transport CO₂ by **~72%** vs. the
+2022 baseline while keeping the average commute under 26 minutes.
+
+> Full methodology, executed Jupyter notebooks, and the regeneration pipeline
+> live in [`analysis/`](analysis/). Run `python analysis/export_results.py` to
+> rebuild `calibrated.json`.
 
 ---
 
@@ -257,7 +308,22 @@ src/
 ├── hooks/
 │   └── useMetrics.js             — memoised hook around the engine
 └── models/
-    └── metrics-engine.js         — pure-function deterministic model engine
+    ├── metrics-engine.js         — pure-function deterministic model engine
+    └── calibrated.json           — Bayesian-calibrated coefficients + optima
+                                    (generated; do not hand-edit)
+
+analysis/                         — Python research layer
+├── engine.py                     — Python port of the metrics engine
+├── calibration.py                — PyMC / NUTS Bayesian calibration
+├── validation.py                 — leave-one-out cross-validation
+├── optimization.py               — CVXPY + SLSQP inverse optimization
+├── export_results.py             — headless pipeline → calibrated.json
+├── data/
+│   └── congestion_observations.csv
+└── notebooks/
+    ├── 01_bayesian_calibration.ipynb
+    ├── 02_validation_backtest.ipynb
+    └── 03_inverse_optimization.ipynb
 ```
 
 ---
@@ -268,6 +334,9 @@ src/
 - **Mapping** — Mapbox GL JS, react-map-gl, Deck.gl (3D scatter, heat-map, trips, line layers)
 - **Charts** — Recharts (radar + delta visualisations)
 - **Engine** — Pure-JS deterministic functions in [`src/models/metrics-engine.js`](src/models/metrics-engine.js)
+- **Analysis** — Python research layer ([`analysis/`](analysis/)): PyMC (Bayesian
+  calibration / NUTS), ArviZ, CVXPY + scipy (inverse optimization), pandas,
+  Jupyter
 - **Deploy** — GitHub Pages via `.github/workflows/deploy.yml`
 
 ---

@@ -2,3 +2,10 @@ node_modules
 .env
 .env.local
 dist/
+
+# Python analysis layer
+analysis/.venv/
+analysis/outputs/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
