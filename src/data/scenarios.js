@@ -61,28 +61,4 @@ export const SCENARIOS = {
     icon:        '🌿',
     mix: { car: 5, bus: 20, subway: 40, cycling: 20, pedestrian: 13, other: 2 },
   },
-
-  // ── Optimizer-derived scenarios ────────────────────────────────────────────
-  // NOT hand-picked. Each is the solution to a constrained inverse-optimization
-  // problem (convex relaxation via CVXPY, refined with SLSQP under the full BPR
-  // congestion feedback) — see analysis/notebooks/03_inverse_optimization.ipynb.
-  // Regenerate via `python analysis/export_results.py`.
-  optNetZero: {
-    label:       'Optimizer · Net-Zero Push',
-    description: 'CO₂-minimal modal split — commute ≤26 min, equity ≥60, car ≤20%',
-    icon:        '🧮',
-    mix: { car: 5, bus: 8, subway: 28.4, cycling: 42, pedestrian: 16.6, other: 0 },
-  },
-  optCommuter: {
-    label:       'Optimizer · Commuter-Friendly',
-    description: 'CO₂-minimal split under a tight 20-min commute ceiling',
-    icon:        '🧮',
-    mix: { car: 5, bus: 8, subway: 40.6, cycling: 42, pedestrian: 4.4, other: 0 },
-  },
-  optLowCost: {
-    label:       'Optimizer · Lowest Cost',
-    description: 'Full-cost-minimal split — commute ≤24 min, equity ≥55',
-    icon:        '🧮',
-    mix: { car: 5, bus: 8, subway: 32.5, cycling: 42, pedestrian: 12.5, other: 0 },
-  },
 };
