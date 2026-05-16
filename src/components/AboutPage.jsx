@@ -169,7 +169,7 @@ const REFERENCES = [
     authors: 'Bureau of Public Roads',
     year: '1964',
     title: 'Traffic Assignment Manual',
-    venue: 'U.S. Department of Commerce. Origin of the BPR volume-delay function (α=0.15, β=4).',
+    venue: 'U.S. Department of Commerce. Original source of the BPR volume-delay function structure. The 1964 textbook coefficients (α=0.15, β=4) are used as prior means; TransitSim ships Bayesian-calibrated posterior estimates fit to observed downtown-Toronto speed data.',
     url: 'https://catalog.hathitrust.org/Record/000968011',
   },
   {
@@ -376,7 +376,7 @@ export default function AboutPage({ onBack }) {
           driven by a road-demand-to-capacity ratio:
         </p>
 
-        <Equation caption="Equation 2 — Augmented BPR (Bureau of Public Roads) volume-delay function as implemented in src/models/metrics-engine.js. Canonical α = 0.15, β = 4; an additional amplifier γ = 3.5 is applied to reflect surface-grid downtown conditions where peak-hour delays exceed what a strict free-flow BPR would predict.">
+        <Equation caption="Equation 2 — Augmented BPR (Bureau of Public Roads) volume-delay function as implemented in src/models/metrics-engine.js. Coefficients (α, β, γ) are Bayesian-calibrated posterior estimates fit via NUTS/HMC to observed downtown-Toronto (V/C, speed) data; the 1964 textbook values (α=0.15, β=4, γ=3.5) serve as prior means. Calibrated values: α≈0.26, β≈2.39, γ≈6.16.">
           v_actual  =  v_free  /  ( 1  +  α · γ · ( V / C )^β )
         </Equation>
 
@@ -538,10 +538,12 @@ export default function AboutPage({ onBack }) {
             <>
               Road demand is computed as Σ N·mₖ·rₖ where rₖ is the moving road
               area per person (Table above). Capacity is 520 lane-km × 3.5 m
-              effective lane width × 1000 m/km. The BPR function with α = 0.15
-              and β = 4<CitationRef n={10}/> degrades car and bus speeds
-              non-linearly under load — note the quartic exponent: a doubling of
-              V/C produces a 16-fold delay penalty.
+              effective lane width × 1000 m/km. The BPR function<CitationRef n={10}/> degrades
+              car and bus speeds non-linearly under load using Bayesian-calibrated
+              coefficients (α≈0.26, β≈2.39, γ≈6.16) fit to observed
+              downtown-Toronto speed data — a doubling of V/C produces a
+              ~5× delay penalty (2^β), compared to the ~16× the 1964 textbook
+              quartic would predict.
             </>
           }
         />

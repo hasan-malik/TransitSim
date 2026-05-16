@@ -1,0 +1,145 @@
+{
+  "_meta": {
+    "generated": "2026-05-16",
+    "pipeline": "analysis/export_results.py",
+    "note": "Bayesian-calibrated BPR coefficients + inverse-optimised modal splits. Do not hand-edit; regenerate via the analysis pipeline.",
+    "n_observations": 14,
+    "mcmc": {
+      "draws": 2000,
+      "tune": 2000,
+      "chains": 4,
+      "sampler": "NUTS"
+    }
+  },
+  "bpr": {
+    "alpha": 0.2618,
+    "beta": 2.3912,
+    "gamma": 6.1597,
+    "v_free": 31.8229
+  },
+  "posterior": {
+    "alpha": {
+      "mean": 0.262,
+      "sd": 0.115,
+      "hdi_lo": 0.11,
+      "hdi_hi": 0.52
+    },
+    "beta": {
+      "mean": 2.391,
+      "sd": 0.26,
+      "hdi_lo": 2.0,
+      "hdi_hi": 2.9
+    },
+    "gamma": {
+      "mean": 6.16,
+      "sd": 2.7,
+      "hdi_lo": 2.6,
+      "hdi_hi": 12.0
+    },
+    "v_free": {
+      "mean": 31.82,
+      "sd": 0.87,
+      "hdi_lo": 30.0,
+      "hdi_hi": 34.0
+    }
+  },
+  "validation": {
+    "mae": 1.2506,
+    "rmse": 1.5981,
+    "mape": 6.7777,
+    "r2": 0.9581,
+    "n": 14
+  },
+  "optimal_policies": {
+    "net_zero_push": {
+      "objective": "co2",
+      "constraints": {
+        "max_commute_min": 26.0,
+        "min_equity": 60.0,
+        "car_max": 0.2
+      },
+      "convex_mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 28.42,
+        "cycling": 42.0,
+        "pedestrian": 16.58,
+        "other": 0.0
+      },
+      "mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 28.42,
+        "cycling": 42.0,
+        "pedestrian": 16.58,
+        "other": 0.0
+      },
+      "resulting": {
+        "co2_tonnes": 56.4,
+        "avg_commute_min": 26.0,
+        "equity_index": 76.0,
+        "overall_score": 40.8
+      }
+    },
+    "commuter_friendly": {
+      "objective": "co2",
+      "constraints": {
+        "max_commute_min": 20.0,
+        "min_equity": 50.0,
+        "car_max": 0.34
+      },
+      "convex_mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 40.57,
+        "cycling": 42.0,
+        "pedestrian": 4.43,
+        "other": 0.0
+      },
+      "mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 40.57,
+        "cycling": 42.0,
+        "pedestrian": 4.43,
+        "other": 0.0
+      },
+      "resulting": {
+        "co2_tonnes": 61.4,
+        "avg_commute_min": 20.0,
+        "equity_index": 76.0,
+        "overall_score": 40.1
+      }
+    },
+    "lowest_cost": {
+      "objective": "cost",
+      "constraints": {
+        "max_commute_min": 24.0,
+        "min_equity": 55.0,
+        "car_max": 0.3
+      },
+      "convex_mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 32.47,
+        "cycling": 42.0,
+        "pedestrian": 12.53,
+        "other": 0.0
+      },
+      "mix": {
+        "car": 5.0,
+        "bus": 8.0,
+        "subway": 32.47,
+        "cycling": 42.0,
+        "pedestrian": 12.53,
+        "other": 0.0
+      },
+      "resulting": {
+        "co2_tonnes": 58.0,
+        "avg_commute_min": 24.0,
+        "equity_index": 76.0,
+        "overall_score": 40.6
+      }
+    }
+  }
+}
