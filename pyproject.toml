@@ -15,9 +15,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic>=2.6",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
+    "httpx>=0.27",  # required by fastapi.testclient
 ]
 
 # ─── pytest config ──────────────────────────────────────────────────────────
@@ -27,7 +33,7 @@ dev = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths  = ["tests", "api/tests"]
-pythonpath = ["."]
+pythonpath = [".", "api"]
 addopts    = "-q --strict-markers"
 
 # ─── ruff config (lightweight; tighten over time) ───────────────────────────
