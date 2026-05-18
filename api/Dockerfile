@@ -71,11 +71,11 @@ USER app
 ENV PORT=8000
 EXPOSE 8000
 
-# Liveness check — mirrors the GET /healthz route.  ``python -c`` keeps
+# Liveness check — mirrors the GET /health route.  ``python -c`` keeps
 # the image curl-less; the only out-of-stdlib dep is the venv.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request,sys; \
-sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{__import__(\"os\").environ.get(\"PORT\",\"8000\")}/healthz',timeout=3).status==200 else 1)"
+sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{__import__(\"os\").environ.get(\"PORT\",\"8000\")}/health',timeout=3).status==200 else 1)"
 
 # ``exec`` form so uvicorn receives SIGTERM directly (clean shutdown).
 # ``--proxy-headers`` makes us trust X-Forwarded-* from the load

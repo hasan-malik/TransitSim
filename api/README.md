@@ -65,7 +65,7 @@ Safe to cache by hash of the request body.
 
 ## Operational
 
-- `GET /healthz` — liveness probe (no engine call)
+- `GET /health` — liveness probe (no engine call)
 - `GET /` — service metadata + endpoint listing
 
 ## Roadmap

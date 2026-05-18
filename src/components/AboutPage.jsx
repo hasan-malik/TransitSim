@@ -717,7 +717,7 @@ https://github.com/hasanmalik/TransitSim`}
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="max-w-5xl mx-auto px-8 py-10 text-center text-[11px] text-slate-600 font-mono">
-        © 2026 Hasan Malik · TransitSim v1.0 · MIT-style research licence
+        © 2026 Hasan Malik · TransitSim v1.0 · MIT Licence
       </footer>
     </div>
   );

@@ -1,0 +1,25 @@
+# Cloud Build pipeline for the TransitSim API image.
+# Builds natively on linux/amd64 (Cloud Run's runtime) and publishes to
+# Artifact Registry. Run with:
+#   gcloud builds submit --config cloudbuild.yaml .
+substitutions:
+  _REGION: us-central1
+  _REPO: transitsim
+  _IMAGE: api
+  _TAG: v1
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - api/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:${_TAG}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest
+      - .
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:${_TAG}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest
+options:
+  logging: CLOUD_LOGGING_ONLY

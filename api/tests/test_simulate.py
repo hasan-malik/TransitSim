@@ -121,8 +121,8 @@ def test_simulate_rejects_missing_mix(client: TestClient) -> None:
 
 # ─── Operational endpoints ───────────────────────────────────────────────
 
-def test_healthz(client: TestClient) -> None:
-    r = client.get("/healthz")
+def test_health(client: TestClient) -> None:
+    r = client.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
 

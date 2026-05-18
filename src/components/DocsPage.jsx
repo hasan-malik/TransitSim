@@ -103,7 +103,7 @@ function FieldRow({ name, type, desc }) {
  * Local-dev placeholder.  When the API is deployed (Cloud Run / App Runner),
  * swap this for the public origin in one place.
  * ──────────────────────────────────────────────────────────────────────────── */
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'https://transitsim-api-993396652568.us-central1.run.app';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * Page
@@ -452,7 +452,7 @@ print(metrics["grade"], metrics["overall_score"])   # C 52.19`}
           <li>
             <strong>Path-prefix versioning.</strong> Every product endpoint
             lives under <code className="text-sky-300">/v1/</code>. Operational
-            endpoints (<code className="text-sky-300">/healthz</code>,{' '}
+            endpoints (<code className="text-sky-300">/health</code>,{' '}
             <code className="text-sky-300">/</code>) stay unversioned.
           </li>
           <li>
@@ -515,7 +515,7 @@ print(metrics["grade"], metrics["overall_score"])   # C 52.19`}
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="max-w-5xl mx-auto px-8 py-10 text-center text-[11px] text-slate-600 font-mono">
-        © 2026 Hasan Malik · TransitSim API v1.0 · MIT-style research licence
+        © 2026 Hasan Malik · TransitSim API v1.0 · MIT Licence
       </footer>
     </div>
   );

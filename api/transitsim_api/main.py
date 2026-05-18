@@ -80,7 +80,7 @@ app = FastAPI(
         "for the full methodology and citation list."
     ),
     contact={"name": "Hasan Malik", "url": "https://github.com/hasanmalik/TransitSim"},
-    license_info={"name": "MIT-style research licence",
+    license_info={"name": "MIT Licence",
                   "url": "https://github.com/hasanmalik/TransitSim/blob/main/LICENSE"},
     lifespan=lifespan,
     docs_url="/docs",
@@ -133,8 +133,8 @@ def index() -> dict:
     }
 
 
-@app.get("/healthz", include_in_schema=False)
-def healthz() -> dict:
+@app.get("/health", include_in_schema=False)
+def health() -> dict:
     """Liveness probe.  Doesn't touch the engine — just confirms the process is up."""
     return {"status": "ok"}
 
