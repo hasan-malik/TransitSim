@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, MapPin, BookOpen } from 'lucide-react';
+import { Activity, MapPin, BookOpen, Code2 } from 'lucide-react';
 
 const GRADE_COLORS = {
   'A+': '#4ade80', A: '#86efac', 'B+': '#a3e635',
   B:    '#fbbf24',  C: '#fb923c',  D:   '#f87171',  F: '#ef4444',
 };
 
-export default function Header({ metrics, activeScenario, comparing, onToggleCompare, onOpenAbout }) {
+export default function Header({ metrics, activeScenario, comparing, onToggleCompare, onOpenAbout, onOpenDocs }) {
   const gradeColor = GRADE_COLORS[metrics.grade] ?? '#94a3b8';
 
   return (
@@ -87,6 +87,15 @@ export default function Header({ metrics, activeScenario, comparing, onToggleCom
         >
           <Activity size={12} />
           {comparing ? 'Comparing' : 'Compare'}
+        </button>
+
+        {/* Docs */}
+        <button
+          onClick={onOpenDocs}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-sky-300 transition-all"
+        >
+          <Code2 size={12} />
+          Docs
         </button>
 
         {/* About */}

@@ -5,6 +5,7 @@ import Map3D from './components/Map3D.jsx';
 import ControlPanel from './components/ControlPanel.jsx';
 import MetricsPanel from './components/MetricsPanel.jsx';
 import AboutPage from './components/AboutPage.jsx';
+import DocsPage from './components/DocsPage.jsx';
 import { useMetrics } from './hooks/useMetrics.js';
 import { BASELINE_MIX } from './models/metrics-engine.js';
 import { SCENARIOS } from './data/scenarios.js';
@@ -25,6 +26,7 @@ export default function App() {
   const [activeScenario, setActiveScenario] = useState('statusQuo');
   const [comparing, setComparing] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showDocs,  setShowDocs]  = useState(false);
 
   const metrics = useMetrics(transitMix);
 
@@ -50,6 +52,7 @@ export default function App() {
         comparing={comparing}
         onToggleCompare={() => setComparing(c => !c)}
         onOpenAbout={() => setShowAbout(true)}
+        onOpenDocs={() => setShowDocs(true)}
       />
 
       <AnimatePresence>
@@ -63,6 +66,18 @@ export default function App() {
             className="absolute inset-0 z-40"
           >
             <AboutPage onBack={() => setShowAbout(false)} />
+          </motion.div>
+        )}
+        {showDocs && (
+          <motion.div
+            key="docs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-40"
+          >
+            <DocsPage onBack={() => setShowDocs(false)} />
           </motion.div>
         )}
       </AnimatePresence>
