@@ -51,7 +51,7 @@
  *   Other:       2 %
  */
 
-import calibrated from './calibrated.json';
+import calibrated from './calibrated.json' with { type: 'json' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS (research-sourced)

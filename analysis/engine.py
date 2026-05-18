@@ -4,18 +4,31 @@ engine.py — Python port of the TransitSim metrics engine.
 This is a faithful, vectorisable re-implementation of
 ``src/models/metrics-engine.js``.  Keeping a single source of truth in
 Python lets the calibration, validation, and optimization notebooks all
-exercise the *exact* model the web app ships.
+exercise the *exact* model the web app ships, and lets the FastAPI
+public API in ``api/`` serve identical numbers.
 
-The only behavioural difference vs. the JS engine is that the BPR
-volume-delay coefficients (alpha, beta, gamma) and the free-flow speed
-are injected as parameters, so the Bayesian calibration can estimate
-them and the validation notebook can sweep them.
+Parity invariants (enforced by ``tests/test_parity.py``):
+- All output fields and values match the JS engine within 1e-6 absolute
+  / 1e-9 relative, for the fixture scenarios in ``tests/scenarios.json``.
+- Default ``BPRParams()`` loads the Bayesian-calibrated coefficients
+  from ``src/models/calibrated.json`` (alpha≈0.262, beta≈2.391,
+  gamma≈6.160), matching what the JS engine ships.  Pass an explicit
+  ``BPRParams(alpha=..., beta=..., gamma=...)`` to override (the
+  calibration likelihood does this).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+import json
+from dataclasses import dataclass, asdict, field
+from pathlib import Path
 import numpy as np
+
+# Path to the canonical Bayesian-calibrated BPR posteriors, written by
+# ``analysis/export_results.py`` and consumed by the JS engine via import.
+# Keeping this as the single source of truth means Python and JS produce
+# identical metrics without anyone passing extra parameters.
+_CALIBRATED_JSON = Path(__file__).resolve().parent.parent / "src" / "models" / "calibrated.json"
 
 MODES = ["car", "bus", "subway", "cycling", "pedestrian", "other"]
 
@@ -37,16 +50,38 @@ COST_PER_PAX_KM = dict(car=0.72, bus=0.35, subway=0.26, cycling=0.07, pedestrian
 BASELINE_MIX = dict(car=34, bus=18, subway=31, cycling=6, pedestrian=9, other=2)
 
 # Textbook Bureau of Public Roads coefficients — the *prior* mean for calibration.
-DEFAULT_BPR = dict(alpha=0.15, beta=4.0, gamma=3.5, v_free=33.0)
+TEXTBOOK_BPR = dict(alpha=0.15, beta=4.0, gamma=3.5, v_free=33.0)
+DEFAULT_BPR = TEXTBOOK_BPR  # back-compat alias for older imports
+
+
+def _load_calibrated_bpr() -> dict:
+    """Read the Bayesian-calibrated posterior means from calibrated.json.
+
+    Falls back to textbook values if the file is missing — keeps the
+    calibration notebooks (which run *before* the file is generated)
+    bootstrappable.
+    """
+    try:
+        with _CALIBRATED_JSON.open() as f:
+            return json.load(f)["bpr"]
+    except (FileNotFoundError, KeyError, json.JSONDecodeError):
+        return dict(TEXTBOOK_BPR)
 
 
 @dataclass
 class BPRParams:
-    """Bureau of Public Roads volume-delay coefficients."""
-    alpha: float = 0.15
-    beta: float = 4.0
-    gamma: float = 3.5
-    v_free: float = 33.0  # free-flow car speed (km/h) — the V/C→0 asymptote
+    """Bureau of Public Roads volume-delay coefficients.
+
+    Defaults to the Bayesian-calibrated posterior means from
+    ``src/models/calibrated.json`` — the same values the JS engine
+    ships — so calling ``BPRParams()`` produces JS-parity outputs.
+    Calibration code that needs the textbook prior should construct
+    ``BPRParams(**TEXTBOOK_BPR)`` explicitly.
+    """
+    alpha:  float = field(default_factory=lambda: _load_calibrated_bpr().get("alpha",  TEXTBOOK_BPR["alpha"]))
+    beta:   float = field(default_factory=lambda: _load_calibrated_bpr().get("beta",   TEXTBOOK_BPR["beta"]))
+    gamma:  float = field(default_factory=lambda: _load_calibrated_bpr().get("gamma",  TEXTBOOK_BPR["gamma"]))
+    v_free: float = field(default_factory=lambda: _load_calibrated_bpr().get("v_free", TEXTBOOK_BPR["v_free"]))
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -82,7 +117,9 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
     Parameters
     ----------
     transit_mix : dict   raw modal-share values (need not sum to 100)
-    bpr         : BPRParams   volume-delay coefficients (default = textbook)
+    bpr         : BPRParams   volume-delay coefficients (default = Bayesian-
+                              calibrated posteriors from calibrated.json;
+                              pass ``BPRParams(**TEXTBOOK_BPR)`` for prior)
     """
     bpr = bpr or BPRParams()
     mix = _normalize({m: transit_mix.get(m, 0) for m in MODES})
@@ -92,11 +129,16 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
 
     co2_tonnes = sum(trips(m) * AVG_TRIP_KM * EMISSION_G_PER_PAX_KM[m] / 1e6 for m in MODES)
     pm25_tonnes = sum(trips(m) * AVG_TRIP_KM * PM25_G_PER_PAX_KM[m] / 1e6 for m in MODES)
-    pm25_ambient = 4.0 + pm25_tonnes * 5000.0
+    # Dispersion factor 56 calibrated so the 2022 Toronto baseline mix
+    # (~0.072 t/day) yields ~8 μg/m³, matching observed downtown PM2.5 of
+    # 7–9 μg/m³ (City of Toronto, 2023). See commit fc4dee5.
+    pm25_ambient = 4.0 + pm25_tonnes * 56.0
     nox_tonnes = sum(trips(m) * AVG_TRIP_KM * NOX_G_PER_PAX_KM[m] / 1e6 for m in MODES)
 
     road_demand = sum(trips(m) * ROAD_M2_PER_PERSON[m] for m in MODES)
-    congestion_index = min(100.0, max(0.0, road_demand / ROAD_CAPACITY_M2 * 100.0))
+    # Temporal factor 12.5 (=100/8) spreads the daily trip total across the
+    # operating day; without it, even walking-dominant mixes saturate.
+    congestion_index = min(100.0, max(0.0, road_demand / ROAD_CAPACITY_M2 * 12.5))
 
     # Augmented BPR — V/C taken as the (clamped) congestion index on [0,1].
     cong_factor = float(bpr_congestion_factor(congestion_index / 100.0, bpr))
@@ -124,8 +166,10 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
     equity_index = min(100.0, (mix["subway"] + mix["bus"] + mix["cycling"] + mix["pedestrian"]) * 0.8
                        + mix["other"] * 0.4)
 
-    co2_score = max(0.0, 100.0 - co2_tonnes / 200.0 * 100.0)
-    air_score = max(0.0, 100.0 - (pm25_ambient - 4.0) / 25.0 * 100.0)
+    # 0 t/day → 100; 420+ t/day → 0 (≈ 100% car worst-case anchor)
+    co2_score = max(0.0, 100.0 - co2_tonnes / 420.0 * 100.0)
+    # 4 μg/m³ → 100; 15+ μg/m³ → 0 (WHO 24h limit)
+    air_score = max(0.0, 100.0 - (pm25_ambient - 4.0) / 11.0 * 100.0)
     cong_score = 100.0 - congestion_index
     noise_score = max(0.0, 100.0 - (noise_dba - 35.0) / 40.0 * 100.0)
 
@@ -134,6 +178,14 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
         + health_index * 0.15 + productivity_index * 0.10
         + noise_score * 0.05 + equity_index * 0.05))
 
+    if   overall >= 90: grade = "A+"
+    elif overall >= 80: grade = "A"
+    elif overall >= 70: grade = "B+"
+    elif overall >= 60: grade = "B"
+    elif overall >= 50: grade = "C"
+    elif overall >= 40: grade = "D"
+    else:               grade = "F"
+
     return dict(
         mix=mix,
         co2_tonnes=co2_tonnes, pm25_tonnes=pm25_tonnes, pm25_ambient=pm25_ambient,
@@ -141,5 +193,14 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
         avg_commute_min=avg_commute_min, avg_speed_kmh=weighted_speed,
         noise_dba=float(noise_dba), health_index=health_index,
         productivity_index=productivity_index, equity_index=equity_index,
-        cost_mday=cost_mday, overall_score=overall,
+        cost_mday=cost_mday, overall_score=overall, grade=grade,
+        scores=dict(
+            climate=round(co2_score),
+            air_quality=round(air_score),
+            congestion=round(cong_score),
+            health=round(health_index),
+            productivity=round(productivity_index),
+            noise=round(noise_score),
+            equity=round(equity_index),
+        ),
     )
