@@ -667,7 +667,7 @@ export default function AboutPage({ onBack }) {
         <Equation>
 {`Malik, H. (2026). TransitSim: An Evidence-Based Modal-Share
 Simulator for Downtown Toronto (v1.0) [Software].
-https://github.com/hasanmalik/TransitSim`}
+https://github.com/hasan-malik/TransitSim`}
         </Equation>
         <p>BibTeX:</p>
         <Equation>
@@ -677,7 +677,7 @@ https://github.com/hasanmalik/TransitSim`}
              Simulator for Downtown Toronto},
   year    = {2026},
   version = {1.0},
-  url     = {https://github.com/hasanmalik/TransitSim}
+  url     = {https://github.com/hasan-malik/TransitSim}
 }`}
         </Equation>
       </Section>
@@ -693,7 +693,7 @@ https://github.com/hasanmalik/TransitSim`}
 
         <div className="not-prose mt-10 flex flex-wrap gap-3">
           <a
-            href="https://github.com/hasanmalik/TransitSim"
+            href="https://github.com/hasan-malik/TransitSim"
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-slate-200 transition-colors"
           >

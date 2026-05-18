@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-
 from transitsim_api.main import app
 from transitsim_api.schemas import SimulateResponse
 

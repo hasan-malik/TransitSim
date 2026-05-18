@@ -76,12 +76,12 @@ app = FastAPI(
         "Every coefficient is sourced from peer-reviewed literature or "
         "published transit-agency data; the volume-delay function uses "
         "Bayesian-calibrated coefficients fit to observed Toronto downtown "
-        "(V/C, speed) data.  See [the About page](https://github.com/hasanmalik/TransitSim) "
+        "(V/C, speed) data.  See [the About page](https://github.com/hasan-malik/TransitSim) "
         "for the full methodology and citation list."
     ),
-    contact={"name": "Hasan Malik", "url": "https://github.com/hasanmalik/TransitSim"},
+    contact={"name": "Hasan Malik", "url": "https://github.com/hasan-malik/TransitSim"},
     license_info={"name": "MIT Licence",
-                  "url": "https://github.com/hasanmalik/TransitSim/blob/main/LICENSE"},
+                  "url": "https://github.com/hasan-malik/TransitSim/blob/main/LICENSE"},
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",

@@ -20,8 +20,9 @@ Parity invariants (enforced by ``tests/test_parity.py``):
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
 import numpy as np
 
 # Path to the canonical Bayesian-calibrated BPR posteriors, written by
@@ -190,13 +191,20 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
         + health_index * 0.15 + productivity_index * 0.10
         + noise_score * 0.05 + equity_index * 0.05))
 
-    if   overall >= 90: grade = "A+"
-    elif overall >= 80: grade = "A"
-    elif overall >= 70: grade = "B+"
-    elif overall >= 60: grade = "B"
-    elif overall >= 50: grade = "C"
-    elif overall >= 40: grade = "D"
-    else:               grade = "F"
+    if overall >= 90:
+        grade = "A+"
+    elif overall >= 80:
+        grade = "A"
+    elif overall >= 70:
+        grade = "B+"
+    elif overall >= 60:
+        grade = "B"
+    elif overall >= 50:
+        grade = "C"
+    elif overall >= 40:
+        grade = "D"
+    else:
+        grade = "F"
 
     return dict(
         mix=mix,

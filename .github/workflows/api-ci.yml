@@ -43,7 +43,10 @@ jobs:
           cache: pip
       - run: pip install ".[dev]"
       - name: ruff check
-        run: ruff check analysis api tests
+        # Production surface only: the API, the parity harness, and the engine
+        # it imports.  The research layer (analysis/ scripts + notebooks) is
+        # exploratory and intentionally out of lint scope.
+        run: ruff check api tests analysis/engine.py
 
   # ─── Test (API unit tests + cross-language parity) ────────────────────────
   # Single job because the parity harness needs both Node and Python in
@@ -77,6 +80,7 @@ jobs:
           context: .
           file: api/Dockerfile
           push: false
+          load: true  # load into the daemon so the smoke-test step can docker run it
           tags: transitsim-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
