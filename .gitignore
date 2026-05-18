@@ -9,3 +9,6 @@ analysis/outputs/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# Claude Code local settings (machine-specific permissions / overrides)
+.claude/settings.local.json

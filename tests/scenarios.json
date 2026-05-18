@@ -1,0 +1,67 @@
+[
+  {
+    "name": "baseline_cordon_count_2022",
+    "description": "City of Toronto Cordon Count 2022 — downtown core baseline",
+    "mix": { "car": 34, "bus": 18, "subway": 31, "cycling": 6, "pedestrian": 9, "other": 2 }
+  },
+  {
+    "name": "transformto_2050_target",
+    "description": "2050 TransformTO Net-Zero scenario from src/data/scenarios.js",
+    "mix": { "car": 5, "bus": 20, "subway": 40, "cycling": 20, "pedestrian": 13, "other": 2 }
+  },
+  {
+    "name": "fifteen_minute_city",
+    "description": "Moreno et al. (2021) 15-minute city — walking + cycling dominant",
+    "mix": { "car": 10, "bus": 10, "subway": 25, "cycling": 30, "pedestrian": 23, "other": 2 }
+  },
+  {
+    "name": "brt_push",
+    "description": "Bus rapid transit expansion — surface-transit-heavy mix",
+    "mix": { "car": 20, "bus": 40, "subway": 25, "cycling": 6, "pedestrian": 7, "other": 2 }
+  },
+  {
+    "name": "car_free_downtown",
+    "description": "Car-free downtown policy — only emergency/service car traffic",
+    "mix": { "car": 0, "bus": 30, "subway": 40, "cycling": 18, "pedestrian": 10, "other": 2 }
+  },
+  {
+    "name": "all_car",
+    "description": "Worst-case: 100% car. Anchors CO2 score floor (420 t/day).",
+    "mix": { "car": 100, "bus": 0, "subway": 0, "cycling": 0, "pedestrian": 0, "other": 0 }
+  },
+  {
+    "name": "all_subway",
+    "description": "Best emissions: 100% subway (TTC electric)",
+    "mix": { "car": 0, "bus": 0, "subway": 100, "cycling": 0, "pedestrian": 0, "other": 0 }
+  },
+  {
+    "name": "all_cycling",
+    "description": "Max health index (anchors normalisation: 7.8 METs → 100)",
+    "mix": { "car": 0, "bus": 0, "subway": 0, "cycling": 100, "pedestrian": 0, "other": 0 }
+  },
+  {
+    "name": "all_pedestrian",
+    "description": "Slow but zero-emission, low congestion",
+    "mix": { "car": 0, "bus": 0, "subway": 0, "cycling": 0, "pedestrian": 100, "other": 0 }
+  },
+  {
+    "name": "equal_six_way_split",
+    "description": "Uniform distribution across all six modes",
+    "mix": { "car": 16.67, "bus": 16.67, "subway": 16.67, "cycling": 16.67, "pedestrian": 16.66, "other": 16.66 }
+  },
+  {
+    "name": "raw_unnormalised_shares",
+    "description": "Inputs that don't sum to 100 — engine must normalise",
+    "mix": { "car": 50, "bus": 30, "subway": 50, "cycling": 10, "pedestrian": 10, "other": 0 }
+  },
+  {
+    "name": "extreme_lopsided",
+    "description": "Edge case: 99% car, 1% subway — near-saturated congestion",
+    "mix": { "car": 99, "bus": 0, "subway": 1, "cycling": 0, "pedestrian": 0, "other": 0 }
+  },
+  {
+    "name": "all_zeros_should_fallback_to_baseline",
+    "description": "All shares zero — engine must fall back to baseline mix",
+    "mix": { "car": 0, "bus": 0, "subway": 0, "cycling": 0, "pedestrian": 0, "other": 0 }
+  }
+]

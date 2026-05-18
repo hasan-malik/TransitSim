@@ -103,6 +103,18 @@ def bpr_speed(vc_ratio, bpr: BPRParams):
     return bpr.v_free / bpr_congestion_factor(vc_ratio, bpr)
 
 
+def _js_round(x: float) -> int:
+    """Match JavaScript ``Math.round`` semantics.
+
+    Python's built-in ``round()`` uses banker's rounding (round-half-to-even),
+    while JS rounds half away from zero (e.g. ``round(92.5) -> 93`` in JS but
+    ``-> 92`` in Python).  The radar sub-scores are integer-rounded in both
+    engines, so we need to match JS here to keep the parity test passing.
+    """
+    import math
+    return math.floor(x + 0.5) if x >= 0 else -math.floor(-x + 0.5)
+
+
 def _normalize(mix: dict) -> dict:
     total = sum(mix.values())
     if total == 0:
@@ -195,12 +207,12 @@ def calculate_metrics(transit_mix: dict, bpr: BPRParams | None = None) -> dict:
         productivity_index=productivity_index, equity_index=equity_index,
         cost_mday=cost_mday, overall_score=overall, grade=grade,
         scores=dict(
-            climate=round(co2_score),
-            air_quality=round(air_score),
-            congestion=round(cong_score),
-            health=round(health_index),
-            productivity=round(productivity_index),
-            noise=round(noise_score),
-            equity=round(equity_index),
+            climate=_js_round(co2_score),
+            air_quality=_js_round(air_score),
+            congestion=_js_round(cong_score),
+            health=_js_round(health_index),
+            productivity=_js_round(productivity_index),
+            noise=_js_round(noise_score),
+            equity=_js_round(equity_index),
         ),
     )

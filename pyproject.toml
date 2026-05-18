@@ -1,0 +1,59 @@
+[project]
+name            = "transitsim"
+version         = "1.0.0"
+description     = "TransitSim — Python workspace for the analysis layer and public API"
+readme          = "README.md"
+requires-python = ">=3.11"
+authors         = [{ name = "Hasan Malik" }]
+license         = { file = "LICENSE" }
+
+# Runtime deps shared by both the analysis layer and the API engine.
+# Heavy analysis-only deps (pymc, arviz, jupyter) live in
+# analysis/requirements.txt; API-only deps live in api/pyproject.toml.
+dependencies = [
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+# ─── pytest config ──────────────────────────────────────────────────────────
+# pythonpath=["."] makes ``from analysis.engine import ...`` work from any
+# subdirectory.  testpaths picks up both the parity test harness at repo root
+# and the unit tests inside the API package.
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths  = ["tests", "api/tests"]
+pythonpath = ["."]
+addopts    = "-q --strict-markers"
+
+# ─── ruff config (lightweight; tighten over time) ───────────────────────────
+[tool.ruff]
+line-length    = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = [
+    "E501",  # line length handled by formatter
+    "E741",  # ambiguous names — accept "l" / "I" in math code
+]
+
+# ─── setuptools: don't try to install anything as a wheel ───────────────────
+# This repo is a workspace, not a publishable package.  We pin the
+# build backend so editable installs (``pip install -e .[dev]``) work
+# without setuptools auto-discovering the React build output.
+[build-system]
+requires      = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []  # no top-level modules to install
+
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["analysis*"]
+exclude = ["node_modules*", "dist*", "src*", "api*", "tests*", "analysis.outputs*", "analysis.notebooks*"]
