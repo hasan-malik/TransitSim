@@ -10,5 +10,12 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
+# Python build / packaging artefacts
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
 # Claude Code local settings (machine-specific permissions / overrides)
 .claude/settings.local.json
