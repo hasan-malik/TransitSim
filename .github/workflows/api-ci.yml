@@ -1,0 +1,99 @@
+name: API CI
+
+on:
+  push:
+    branches: ["main", "api/**"]
+    paths:
+      - "analysis/**"
+      - "api/**"
+      - "src/models/calibrated.json"
+      - "src/models/metrics-engine.js"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/api-ci.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "analysis/**"
+      - "api/**"
+      - "src/models/calibrated.json"
+      - "src/models/metrics-engine.js"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/api-ci.yml"
+
+# Cancel any superseded run on the same ref — saves Actions minutes
+concurrency:
+  group: api-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION:   "22"
+
+jobs:
+  # ─── Lint (cheap; fails fast) ─────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: ruff check
+        run: ruff check analysis api tests
+
+  # ─── Test (API unit tests + cross-language parity) ────────────────────────
+  # Single job because the parity harness needs both Node and Python in
+  # the same workspace.  Keeps the dependency graph trivial.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: install python deps
+        run: pip install ".[api,dev]"
+      - name: pytest (api + parity)
+        run: pytest -v
+
+  # ─── Docker build (catches Dockerfile breakage before main) ───────────────
+  docker:
+    runs-on: ubuntu-latest
+    needs: test  # don't waste cycles building on failing tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: api/Dockerfile
+          push: false
+          tags: transitsim-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke-test the built image
+        run: |
+          docker run -d --name api -p 8000:8000 transitsim-api:ci
+          # Wait for the healthcheck to flip to "healthy" (max 30s).
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format='{{.State.Health.Status}}' api 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then break; fi
+            sleep 1
+          done
+          docker logs api
+          test "$(docker inspect --format='{{.State.Health.Status}}' api)" = "healthy"
+          # Hit the endpoint and check the structural response.
+          curl -fsS -X POST http://127.0.0.1:8000/v1/simulate \
+            -H 'Content-Type: application/json' \
+            -d '{"mix":{"car":5,"bus":20,"subway":40,"cycling":20,"pedestrian":13,"other":2}}' \
+            | jq -e '.grade == "B+"' >/dev/null
+          docker rm -f api

@@ -1,0 +1,53 @@
+# Keep the docker build context small + reproducible.
+# Anything not needed at runtime stays out of the image.
+
+# Version control
+.git
+.gitignore
+.github
+
+# Frontend artefacts — the API doesn't need them
+node_modules
+dist
+src/components
+src/data
+src/hooks
+src/App.jsx
+src/main.jsx
+src/index.css
+index.html
+vite.config.js
+tailwind.config.js
+postcss.config.js
+package.json
+package-lock.json
+
+# Python build / cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ruff_cache
+.mypy_cache
+*.egg-info
+.venv
+analysis/.venv
+analysis/outputs
+analysis/notebooks
+.ipynb_checkpoints
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Tests + docs not needed inside the image (CI runs them outside)
+tests
+api/tests
+api/README.md
+
+# Claude Code workspace
+.claude
+init.txt
