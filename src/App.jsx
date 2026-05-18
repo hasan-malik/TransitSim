@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from './components/Header.jsx';
 import Map3D from './components/Map3D.jsx';
@@ -20,13 +20,32 @@ const DEFAULT_LAYERS = {
   heatmap:    true,
 };
 
+// ─── Hash routing — makes /#/docs and /#/about directly linkable ──────────────
+// Section anchors inside the About page (#methodology, #data, …) return null so
+// they scroll natively without closing the overlay.
+function readRoute() {
+  const h = window.location.hash;
+  if (h === '#/docs')  return 'docs';
+  if (h === '#/about') return 'about';
+  if (h === '' || h === '#') return '';
+  return null;
+}
+
 export default function App() {
   const [transitMix, setTransitMix] = useState(BASELINE_MIX);
   const [activeLayers, setActiveLayers] = useState(DEFAULT_LAYERS);
   const [activeScenario, setActiveScenario] = useState('statusQuo');
   const [comparing, setComparing] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
-  const [showDocs,  setShowDocs]  = useState(false);
+  const [route, setRoute] = useState(() => readRoute() ?? '');
+
+  useEffect(() => {
+    const sync = () => { const r = readRoute(); if (r !== null) setRoute(r); };
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+
+  const showAbout = route === 'about';
+  const showDocs  = route === 'docs';
 
   const metrics = useMetrics(transitMix);
 
@@ -44,6 +63,13 @@ export default function App() {
     setTransitMix(prev => ({ ...prev, [mode]: value }));
   }, []);
 
+  const openAbout    = useCallback(() => { window.location.hash = '/about'; }, []);
+  const openDocs     = useCallback(() => { window.location.hash = '/docs';  }, []);
+  const closeOverlay = useCallback(() => {
+    window.history.pushState('', document.title, window.location.pathname + window.location.search);
+    setRoute('');
+  }, []);
+
   return (
     <div className="flex flex-col w-full h-full bg-surface-900 overflow-hidden">
       <Header
@@ -51,8 +77,8 @@ export default function App() {
         activeScenario={activeScenario}
         comparing={comparing}
         onToggleCompare={() => setComparing(c => !c)}
-        onOpenAbout={() => setShowAbout(true)}
-        onOpenDocs={() => setShowDocs(true)}
+        onOpenAbout={openAbout}
+        onOpenDocs={openDocs}
       />
 
       <AnimatePresence>
@@ -65,7 +91,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="absolute inset-0 z-40"
           >
-            <AboutPage onBack={() => setShowAbout(false)} />
+            <AboutPage onBack={closeOverlay} />
           </motion.div>
         )}
         {showDocs && (
@@ -77,7 +103,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="absolute inset-0 z-40"
           >
-            <DocsPage onBack={() => setShowDocs(false)} />
+            <DocsPage onBack={closeOverlay} />
           </motion.div>
         )}
       </AnimatePresence>
