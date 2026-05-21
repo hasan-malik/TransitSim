@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, RotateCcw } from 'lucide-react';
 import TransitSlider, { MODE_CONFIG } from './TransitSlider.jsx';
@@ -158,29 +159,89 @@ function MixBar({ transitMix, total }) {
 }
 
 // ─── Scenario button ───────────────────────────────────────────────────────────
+const TOOLTIP_WIDTH      = 224; // Tailwind w-56
+const TOOLTIP_EST_HEIGHT = 84;  // header + 2-3 lines of body
+const TOOLTIP_GAP        = 8;
+const VIEWPORT_MARGIN    = 8;
+
 function ScenarioButton({ scenario, active, onClick }) {
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+
+  // Compute tooltip placement relative to the viewport so it escapes
+  // every sidebar / map / header stacking context.
+  const show = () => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const placeAbove = r.top > TOOLTIP_EST_HEIGHT + TOOLTIP_GAP + VIEWPORT_MARGIN;
+    const top = placeAbove
+      ? r.top - TOOLTIP_EST_HEIGHT - TOOLTIP_GAP
+      : r.bottom + TOOLTIP_GAP;
+    const centred = r.left + r.width / 2 - TOOLTIP_WIDTH / 2;
+    const left = Math.max(
+      VIEWPORT_MARGIN,
+      Math.min(window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN, centred),
+    );
+    setPos({ top, left, placeAbove });
+  };
+
+  const hide = () => setPos(null);
+
   return (
-    <motion.button
-      onClick={onClick}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.97 }}
-      className={`relative text-left px-2.5 py-2 rounded-lg text-[11px] transition-all overflow-hidden ${
-        active
-          ? 'bg-sky-400/15 border border-sky-400/30 text-sky-200'
-          : 'bg-white/4 border border-white/8 text-slate-400 hover:text-slate-200 hover:bg-white/8'
-      }`}
-    >
-      {active && (
-        <motion.div
-          layoutId="scenario-bg"
-          className="absolute inset-0 bg-sky-400/8 rounded-lg"
-        />
-      )}
-      <div className="relative z-10">
-        <span className="text-base leading-none">{scenario.icon}</span>
-        <div className="font-semibold leading-tight mt-0.5">{scenario.label}</div>
-      </div>
-    </motion.button>
+    <>
+      <motion.button
+        ref={btnRef}
+        onClick={onClick}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        className={`relative w-full text-left px-2.5 py-2 rounded-lg text-[11px] transition-all overflow-hidden ${
+          active
+            ? 'bg-sky-400/15 border border-sky-400/30 text-sky-200'
+            : 'bg-white/4 border border-white/8 text-slate-400 hover:text-slate-200 hover:bg-white/8'
+        }`}
+      >
+        {active && (
+          <motion.div
+            layoutId="scenario-bg"
+            className="absolute inset-0 bg-sky-400/8 rounded-lg"
+          />
+        )}
+        <div className="relative z-10">
+          <span className="text-base leading-none">{scenario.icon}</span>
+          <div className="font-semibold leading-tight mt-0.5">{scenario.label}</div>
+        </div>
+      </motion.button>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {pos && scenario.source && (
+              <motion.div
+                initial={{ opacity: 0, y: pos.placeAbove ? 4 : -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: pos.placeAbove ? 4 : -4 }}
+                transition={{ duration: 0.12, ease: 'easeOut' }}
+                role="tooltip"
+                style={{ top: pos.top, left: pos.left, width: TOOLTIP_WIDTH }}
+                className="fixed z-[9999] pointer-events-none"
+              >
+                <div className="rounded-md border border-white/10 bg-surface-900/95 backdrop-blur px-2.5 py-2 text-[10.5px] leading-snug text-slate-200 shadow-lg shadow-black/40">
+                  <div className="text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-1">
+                    Based on
+                  </div>
+                  {scenario.source}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+    </>
   );
 }
 
