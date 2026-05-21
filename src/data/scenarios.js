@@ -71,9 +71,9 @@ const BASELINE_SCENARIOS = {
     mix: { car: 20, bus: 45, subway: 20, cycling: 6, pedestrian: 7, other: 2 },
   },
   greenMix: {
-    label:       '2050 TransformTO Target',
+    label:       'CO₂ Target',
     description: 'Toronto Climate Action Strategy net-zero mobility scenario',
-    source:      "City of Toronto's Council-adopted TransformTO Net-Zero Strategy.",
+    source:      "City of Toronto's Council-adopted TransformTO 2050 Net-Zero Strategy.",
     icon:        '🌿',
     mix: { car: 5, bus: 20, subway: 40, cycling: 20, pedestrian: 13, other: 2 },
   },
@@ -90,7 +90,7 @@ const OPTIMIZER_META = {
     icon:        '🎯',
   },
   commuter_friendly: {
-    label:       'Optimized Commute Time',
+    label:       'Optimized Commute',
     description: 'Min commute · CO₂-aware · car ≤ 34%',
     source:      'Inverse-optimised mix: minimum CO₂ subject to commute ≤ 20 min, equity ≥ 50, car ≤ 34%.',
     icon:        '⏱️',
